@@ -57,6 +57,7 @@ deploy/
 `-- rootfs/
     `-- opt/
         `-- IoTEdge/
+            |-- apps/
             |-- bin/
             |-- config/
             |-- data/
@@ -76,6 +77,8 @@ The expected target layout is:
 
 ```text
 /opt/IoTEdge/
+|-- apps/
+|   `-- telemetry/
 |-- bin/
 |   |-- mosquitto
 |   |-- mosquitto_pub
@@ -91,16 +94,18 @@ The expected target layout is:
 |-- scripts/
 |   `-- install-services.sh
 |-- services/
-|   `-- iotedge-mosquitto.service
+|   |-- iotedge-mosquitto.service
+|   `-- iotedge-telemetry.service
 `-- third_party/
     |-- cjson/
     `-- mosquitto/
 ```
 
-Place executable programs in `bin/`, shared libraries in `lib/`, and runtime
-configuration in `config/<package>/`, target-side helper scripts in `scripts/`,
-and systemd units in `services/`. The full staged install tree for each package
-is also preserved under `third_party/<package>/`.
+Place applications in `apps/`, executable programs in `bin`, shared libraries
+in `lib/`, and runtime configuration in `config/<package>/`. Target-side helper
+scripts live in `scripts/`, and systemd units live in `services/`. The full
+staged install tree for each package is also preserved under
+`third_party/<package>/`.
 
 ## Deploy with the script
 
@@ -136,7 +141,7 @@ user can write to `/opt/IoTEdge`:
 ```bash
 sudo mkdir -p /opt/IoTEdge
 sudo chown -R debian:debian /opt/IoTEdge
-sudo apt install rsync
+sudo apt install rsync python3 python3-paho-mqtt
 ```
 
 Replace `debian:debian` with the target user and group when needed.
@@ -156,9 +161,13 @@ INSTALL_ROOT=/path/to/install ./scripts/rsync.sh --stage-only
 
 The script also stages tracked runtime files from:
 
+- `deploy/apps/`
 - `config/`
 - `services/`
 - `deploy/scripts/`
+
+Use `deploy/apps/<app-name>/` for Python applications that should run directly
+on the target. Keep `apps/` for source code and compiled application projects.
 
 ## Manual staging reference
 
@@ -166,6 +175,7 @@ Create the deployment directories from the repository root:
 
 ```bash
 mkdir -p deploy/rootfs/opt/IoTEdge/bin
+mkdir -p deploy/rootfs/opt/IoTEdge/apps
 mkdir -p deploy/rootfs/opt/IoTEdge/config
 mkdir -p deploy/rootfs/opt/IoTEdge/lib
 mkdir -p deploy/rootfs/opt/IoTEdge/logs

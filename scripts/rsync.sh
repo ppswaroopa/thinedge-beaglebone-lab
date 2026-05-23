@@ -10,6 +10,7 @@ target_user="${TARGET_USER:-debian}"
 repo_config_root="$project_root/config"
 repo_service_root="$project_root/services"
 repo_script_root="$project_root/deploy/scripts"
+repo_app_root="$project_root/deploy/apps"
 stage_only=false
 clean_stage=false
 
@@ -116,6 +117,7 @@ create_runtime_layout() {
     mkdir -p "$runtime_root/logs"
     mkdir -p "$runtime_root/scripts"
     mkdir -p "$runtime_root/services"
+    mkdir -p "$runtime_root/apps"
     mkdir -p "$runtime_root/third_party"
 }
 
@@ -204,6 +206,10 @@ stage_install_tree() {
 }
 
 stage_repo_runtime_files() {
+    copy_dir_contents "$repo_app_root" \
+        "$runtime_root/apps" \
+        "repo-managed applications"
+
     copy_dir_contents "$repo_config_root" \
         "$runtime_root/config" \
         "repo-managed configuration"
@@ -215,6 +221,8 @@ stage_repo_runtime_files() {
     copy_dir_contents "$repo_script_root" \
         "$runtime_root/scripts" \
         "target deployment scripts"
+
+    find "$runtime_root" -name .gitkeep -type f -delete
 }
 
 print_layout() {

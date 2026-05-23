@@ -1,0 +1,13 @@
+[Unit]
+Description=IoTEdge Telemetry Service
+After=iotedge-mosquitto.service
+Wants=iotedge-mosquitto.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/IoTEdge/apps/telemetry/telemetry.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

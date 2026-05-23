@@ -7,6 +7,9 @@ install_root="${INSTALL_ROOT:-$project_root/third_party/install}"
 overlay_root="$project_root/deploy/rootfs"
 runtime_root="$overlay_root/opt/IoTEdge"
 target_user="${TARGET_USER:-debian}"
+repo_config_root="$project_root/config"
+repo_service_root="$project_root/services"
+repo_script_root="$project_root/deploy/scripts"
 stage_only=false
 clean_stage=false
 
@@ -200,6 +203,20 @@ stage_install_tree() {
     log "Staged $package_count package install tree(s)."
 }
 
+stage_repo_runtime_files() {
+    copy_dir_contents "$repo_config_root" \
+        "$runtime_root/config" \
+        "repo-managed configuration"
+
+    copy_dir_contents "$repo_service_root" \
+        "$runtime_root/services" \
+        "repo-managed services"
+
+    copy_dir_contents "$repo_script_root" \
+        "$runtime_root/scripts" \
+        "target deployment scripts"
+}
+
 print_layout() {
     log "Host deployment overlay:"
     find "$overlay_root" -mindepth 1 -print | sort
@@ -232,6 +249,7 @@ fi
 require_install_tree
 create_runtime_layout
 stage_install_tree
+stage_repo_runtime_files
 print_layout
 
 if [ "$stage_only" = true ]; then
@@ -244,5 +262,5 @@ sync_overlay
 
 log "Deployment complete."
 log "Runtime root on target: /opt/IoTEdge"
-log "Example runtime environment:"
-log "  export LD_LIBRARY_PATH=/opt/IoTEdge/lib:\${LD_LIBRARY_PATH:-}"
+log "Run these on the target:"
+log "  /opt/IoTEdge/scripts/install-services.sh"

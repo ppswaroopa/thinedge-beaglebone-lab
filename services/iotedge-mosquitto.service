@@ -1,0 +1,13 @@
+[Unit]
+Description=IoTEdge MQTT Broker
+After=network.target
+
+[Service]
+Type=simple
+Environment=LD_LIBRARY_PATH=/opt/IoTEdge/lib
+ExecStart=/opt/IoTEdge/bin/mosquitto -c /opt/IoTEdge/config/mosquitto/mosquitto.conf
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

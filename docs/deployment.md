@@ -89,15 +89,18 @@ The expected target layout is:
 |   `-- libmosquitto.so.1
 |-- logs/
 |-- scripts/
+|   `-- install-services.sh
 |-- services/
+|   `-- iotedge-mosquitto.service
 `-- third_party/
     |-- cjson/
     `-- mosquitto/
 ```
 
 Place executable programs in `bin/`, shared libraries in `lib/`, and runtime
-configuration in `config/<package>/`. The full staged install tree for each
-package is also preserved under `third_party/<package>/`.
+configuration in `config/<package>/`, target-side helper scripts in `scripts/`,
+and systemd units in `services/`. The full staged install tree for each package
+is also preserved under `third_party/<package>/`.
 
 ## Deploy with the script
 
@@ -151,6 +154,12 @@ Override the install source with `INSTALL_ROOT` when needed:
 INSTALL_ROOT=/path/to/install ./scripts/rsync.sh --stage-only
 ```
 
+The script also stages tracked runtime files from:
+
+- `config/`
+- `services/`
+- `deploy/scripts/`
+
 ## Manual staging reference
 
 Create the deployment directories from the repository root:
@@ -202,7 +211,26 @@ export LD_LIBRARY_PATH=/opt/IoTEdge/lib:${LD_LIBRARY_PATH:-}
 Start Mosquitto:
 
 ```bash
-/opt/IoTEdge/bin/mosquitto -c /opt/IoTEdge/config/mosquitto/mosquitto.conf.example
+/opt/IoTEdge/bin/mosquitto \
+    -c /opt/IoTEdge/config/mosquitto/mosquitto.conf
+```
+
+To install tracked systemd service files after deployment, run:
+
+```bash
+/opt/IoTEdge/scripts/install-services.sh
+```
+
+Start the MQTT broker service:
+
+```bash
+sudo systemctl start iotedge-mosquitto.service
+```
+
+Check service status:
+
+```bash
+systemctl status iotedge-mosquitto.service
 ```
 
 For a quick smoke test without a configuration file, use:

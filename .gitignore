@@ -57,6 +57,7 @@ compile_commands.json
 *.log
 *.bak
 *.swp
+__pycache__/
 
 # vcpkg
 vcpkg_installed/
@@ -90,4 +91,4 @@ sysroots/*
 *.log
 
 third_party/
-deploy/rootfs
+deploy/

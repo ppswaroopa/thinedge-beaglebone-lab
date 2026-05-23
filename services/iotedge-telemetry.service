@@ -1,10 +1,12 @@
 [Unit]
 Description=IoTEdge Telemetry Service
-After=iotedge-mosquitto.service
+After=network.target iotedge-mosquitto.service
 Wants=iotedge-mosquitto.service
 
 [Service]
 Type=simple
+WorkingDirectory=/opt/IoTEdge/apps/telemetry
+Environment=PYTHONUNBUFFERED=1
 ExecStart=/usr/bin/python3 /opt/IoTEdge/apps/telemetry/telemetry.py
 Restart=always
 RestartSec=5

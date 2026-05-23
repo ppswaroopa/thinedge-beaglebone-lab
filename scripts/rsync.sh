@@ -9,7 +9,7 @@ runtime_root="$overlay_root/opt/IoTEdge"
 target_user="${TARGET_USER:-debian}"
 repo_config_root="$project_root/config"
 repo_service_root="$project_root/services"
-repo_script_root="$project_root/deploy/scripts"
+repo_script_root="$project_root/scripts/target"
 repo_app_root="$project_root/deploy/apps"
 stage_only=false
 clean_stage=false
@@ -133,6 +133,21 @@ copy_dir_contents() {
     fi
 }
 
+copy_app_contents() {
+    local src=$1
+    local dst=$2
+    local label=$3
+
+    if [ -d "$src" ]; then
+        log "Staging $label: ${src#$project_root/} -> ${dst#$project_root/}"
+        mkdir -p "$dst"
+        rsync -a \
+            --exclude __pycache__/ \
+            --exclude "*.pyc" \
+            "$src/" "$dst/"
+    fi
+}
+
 stage_config_dir() {
     local package_dir=$1
     local package_name=$2
@@ -206,9 +221,7 @@ stage_install_tree() {
 }
 
 stage_repo_runtime_files() {
-    copy_dir_contents "$repo_app_root" \
-        "$runtime_root/apps" \
-        "repo-managed applications"
+    stage_deploy_apps
 
     copy_dir_contents "$repo_config_root" \
         "$runtime_root/config" \
@@ -223,6 +236,33 @@ stage_repo_runtime_files() {
         "target deployment scripts"
 
     find "$runtime_root" -name .gitkeep -type f -delete
+    find "$runtime_root" -name __pycache__ -type d -prune -exec rm -rf {} +
+    find "$runtime_root" -name "*.pyc" -type f -delete
+}
+
+stage_deploy_apps() {
+    local marker_file
+    local app_dir
+    local app_name
+    local app_count=0
+
+    if [ ! -d "$repo_app_root" ]; then
+        log "No deployable Python applications found under deploy/apps."
+        return
+    fi
+
+    while IFS= read -r marker_file; do
+        app_dir="$(dirname "$marker_file")"
+        app_name="$(basename "$app_dir")"
+        copy_app_contents "$app_dir" \
+            "$runtime_root/apps/$app_name" \
+            "deployable Python application $app_name"
+        app_count=$((app_count + 1))
+    done < <(find "$repo_app_root" -mindepth 2 -maxdepth 2 -name .iotedge-app -type f | sort)
+
+    if [ "$app_count" -eq 0 ]; then
+        log "No deployable Python applications found under deploy/apps."
+    fi
 }
 
 print_layout() {

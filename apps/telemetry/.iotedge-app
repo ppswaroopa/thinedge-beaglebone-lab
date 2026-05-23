@@ -1,0 +1,2 @@
+runtime=python
+entrypoint=telemetry.py

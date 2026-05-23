@@ -141,7 +141,7 @@ user can write to `/opt/IoTEdge`:
 ```bash
 sudo mkdir -p /opt/IoTEdge
 sudo chown -R debian:debian /opt/IoTEdge
-sudo apt install rsync python3 python3-paho-mqtt
+sudo apt install rsync python3 python3-paho-mqtt python3-psutil
 ```
 
 Replace `debian:debian` with the target user and group when needed.
@@ -159,15 +159,24 @@ Override the install source with `INSTALL_ROOT` when needed:
 INSTALL_ROOT=/path/to/install ./scripts/rsync.sh --stage-only
 ```
 
-The script also stages tracked runtime files from:
+The script stages generated and tracked runtime inputs from:
 
 - `deploy/apps/`
 - `config/`
 - `services/`
-- `deploy/scripts/`
+- `scripts/target/`
 
-Use `deploy/apps/<app-name>/` for Python applications that should run directly
-on the target. Keep `apps/` for source code and compiled application projects.
+Use `apps/` for application development. For Python applications that should
+run directly on the target, manually copy the app folder into
+`deploy/apps/<app-name>/` before running the deployment script. The `deploy/`
+directory is ignored by Git and is treated as generated deployment state.
+
+Example:
+
+```bash
+mkdir -p deploy/apps
+cp -a apps/telemetry deploy/apps/
+```
 
 ## Manual staging reference
 
@@ -241,6 +250,25 @@ Check service status:
 
 ```bash
 systemctl status iotedge-mosquitto.service
+```
+
+Start the telemetry service:
+
+```bash
+sudo systemctl start iotedge-telemetry.service
+```
+
+Watch telemetry from the target:
+
+```bash
+/opt/IoTEdge/bin/mosquitto_sub -v -t 'device/#'
+```
+
+If `device/status` changes from `online` back to `offline`, the telemetry
+service is starting and then exiting unexpectedly. Check the service logs:
+
+```bash
+journalctl -u iotedge-telemetry.service -f
 ```
 
 For a quick smoke test without a configuration file, use:

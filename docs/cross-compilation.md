@@ -285,6 +285,9 @@ chmod +x hello_arm
 ./hello_arm
 ```
 
+For the managed `/opt/IoTEdge` deployment layout, see
+[`docs/deployment.md`](deployment.md).
+
 ## Troubleshooting
 
 ### Missing glibc version
@@ -318,3 +321,10 @@ readelf -a hello_arm | grep GLIBC
 - SDK-based toolchains improve reproducibility and ABI consistency.
 - Host build environments and target runtime environments should stay separate.
 - Yocto SDKs and vendor SDKs solve this class of problem.
+
+## Related documents
+
+- [`docs/mosquitto-cross-compilation.md`](mosquitto-cross-compilation.md)
+  describes how to cross-compile Mosquitto and cJSON with this setup.
+- [`docs/deployment.md`](deployment.md) describes how to stage runtime
+  artifacts and deploy them to the BeagleBone Black.

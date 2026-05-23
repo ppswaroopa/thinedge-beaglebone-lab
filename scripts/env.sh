@@ -7,7 +7,7 @@ export PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export TOOLCHAIN_ROOT="$PROJECT_ROOT/toolchains/armv7-eabihf--glibc--stable-2018.11-1"
 
 # Target sysroot copied from the BeagleBone Black
-export SYSROOT="$PROJECT_ROOT/sysroots/bbb"
+export SYSROOT="$TOOLCHAIN_ROOT/arm-buildroot-linux-gnueabihf/sysroot"
 
 # Toolchain binaries
 export PATH="$TOOLCHAIN_ROOT/bin:$PATH"

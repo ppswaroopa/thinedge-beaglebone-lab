@@ -95,6 +95,21 @@ For details, see [`toolchains/README.md`](toolchains/README.md),
 [`sysroots/README.md`](sysroots/README.md), and
 [`docs/cross-compilation.md`](docs/cross-compilation.md).
 
+## Documentation
+
+Use these documents in order when replicating the current workflow:
+
+1. [`toolchains/README.md`](toolchains/README.md): install the Bootlin ARM
+   toolchain used by this lab.
+1. [`sysroots/README.md`](sysroots/README.md): copy the target sysroot from the
+   BeagleBone Black.
+1. [`docs/cross-compilation.md`](docs/cross-compilation.md): understand the
+   BeagleBone Black cross-compilation workflow and ABI constraints.
+1. [`docs/mosquitto-cross-compilation.md`](docs/mosquitto-cross-compilation.md):
+   build Mosquitto and its cJSON dependency for the target.
+1. [`docs/deployment.md`](docs/deployment.md): stage runtime artifacts and
+   deploy them to `/opt/IoTEdge`.
+
 ## Roadmap
 
 ### Phase 0: Foundation setup

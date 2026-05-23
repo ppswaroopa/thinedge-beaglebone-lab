@@ -88,3 +88,6 @@ sysroots/*
 
 # Temporary
 *.log
+
+third_party/
+deploy/rootfs

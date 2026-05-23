@@ -67,3 +67,24 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# Toolchains
+toolchains/*
+!toolchains/README.md
+!toolchains/*.cmake
+
+# Sysroots
+sysroots/*
+!sysroots/README.md
+
+# Archives
+*.tar.xz
+*.tar.gz
+*.zip
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary
+*.log

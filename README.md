@@ -2,34 +2,34 @@
 
 A home IoT gateway lab that uses thin-edge.io on a BeagleBone Black.
 
-![Status: Phase 0](https://img.shields.io/badge/status-Phase%200-blue)
-![Version: 0.1.0](https://img.shields.io/badge/version-0.0.1-blue)
+![Status: build ready](https://img.shields.io/badge/status-build%20ready-blue)
+![Version: 0.1.0](https://img.shields.io/badge/version-0.1.0-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![Hardware: BeagleBone Black](https://img.shields.io/badge/hardware-BeagleBone%20Black-black)
 ![OS: Debian](https://img.shields.io/badge/os-Debian-red)
 ![Edge runtime: thin-edge.io](https://img.shields.io/badge/edge-thin--edge.io-blue)
 ![Messaging: MQTT](https://img.shields.io/badge/messaging-MQTT-purple)
 ![Dashboard: Node-RED](https://img.shields.io/badge/dashboard-Node--RED-red)
+![Build: CMake and Ninja](https://img.shields.io/badge/build-CMake%20%2B%20Ninja-green)
 
 ## Progress
 
-### Phase checklist
-
-- [x] Phase 0: Foundation setup
-- [ ] Phase 1: MQTT fundamentals
-- [ ] Phase 2: thin-edge.io integration
-- [ ] Phase 3: Dashboard and visualization
-- [ ] Phase 4: Industrial gateway simulation
-- [ ] Phase 5: Cross-compilation
-- [ ] Phase 6: Cloud integration
-- [ ] Phase 7: Containerization
-- [ ] Phase 8: Yocto familiarity
+- [x] Cross-compilation workflow
+- [ ] MQTT fundamentals
+- [ ] thin-edge.io integration
+- [ ] Dashboard and visualization
+- [ ] Industrial gateway simulation
+- [ ] Cloud integration
+- [ ] Containerization
+- [ ] Yocto familiarity
 
 ## Overview
 
 This repository tracks a practical, industrial-style IoT and edge gateway
 learning project that focuses on embedded Linux, MQTT telemetry, thin-edge.io,
 dashboards, cloud connectivity, cross-compilation, and deployment workflows.
+The first completed milestone is a working BeagleBone Black cross-compilation
+workflow.
 
 ## Goals
 
@@ -54,17 +54,46 @@ Possible folder structure:
 
 ```text
 edge-lab/
+|-- apps/
 |-- dashboards/
 |-- docker/
 |-- docs/
-|-- experiments/
 |-- mqtt/
 |-- scripts/
 |-- services/
+|-- sysroots/
 |-- telemetry/
-|-- cross_compile/
+|-- toolchains/
 `-- README.md
 ```
+
+## Build setup
+
+Set up the cross-compilation toolchain before building target applications.
+
+1. Download the Bootlin ARMv7 hard-float toolchain.
+1. Extract it under `toolchains/`.
+1. Copy the target sysroot from the BeagleBone Black:
+
+   ```bash
+   mkdir -p sysroots/bbb/usr
+   rsync -avz --delete debian@<BBB_IP>:/lib/ sysroots/bbb/lib/
+   rsync -avz --delete debian@<BBB_IP>:/usr/include/ sysroots/bbb/usr/include/
+   rsync -avz --delete debian@<BBB_IP>:/usr/lib/ sysroots/bbb/usr/lib/
+   ```
+
+1. Load the embedded SDK environment:
+
+   ```bash
+   source scripts/env.sh
+   ```
+
+1. Configure applications with
+   [`toolchains/bbb-armhf.cmake`](toolchains/bbb-armhf.cmake).
+
+For details, see [`toolchains/README.md`](toolchains/README.md),
+[`sysroots/README.md`](sysroots/README.md), and
+[`docs/cross-compilation.md`](docs/cross-compilation.md).
 
 ## Roadmap
 
@@ -284,16 +313,32 @@ Learn:
 
 #### Phase 5 tasks
 
-Install the ARM toolchain on the laptop:
+Follow the documented workflow in
+[`docs/cross-compilation.md`](docs/cross-compilation.md).
+
+Set up the Bootlin ARMv7 hard-float toolchain by following
+[`toolchains/README.md`](toolchains/README.md).
+
+Copy the target sysroot by following
+[`sysroots/README.md`](sysroots/README.md).
+
+Load the embedded SDK environment from the repository root:
 
 ```bash
-sudo apt install gcc-arm-linux-gnueabihf
+source scripts/env.sh
 ```
 
-Cross-compile an application:
+Use the project CMake toolchain file:
+
+- [`toolchains/bbb-armhf.cmake`](toolchains/bbb-armhf.cmake)
+
+Configure and build an application:
 
 ```bash
-arm-linux-gnueabihf-g++ app.cpp -o app
+cmake ../apps/hello_arm \
+    -DCMAKE_TOOLCHAIN_FILE=../toolchains/bbb-armhf.cmake \
+    -G Ninja
+ninja
 ```
 
 Copy the application to the BeagleBone Black:

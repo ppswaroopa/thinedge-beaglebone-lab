@@ -1,0 +1,2 @@
+[target.armv7-unknown-linux-gnueabihf]
+linker = "/home/pswaroopa/thinedge-beaglebone-lab/toolchains/armv7-eabihf--glibc--stable-2018.11-1/bin/arm-buildroot-linux-gnueabihf-gcc"

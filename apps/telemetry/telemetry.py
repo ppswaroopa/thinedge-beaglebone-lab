@@ -12,11 +12,12 @@ from config import MQTT_BROKER
 from config import MQTT_KEEPALIVE_SECONDS
 from config import MQTT_PORT
 from config import PUBLISH_INTERVAL_SECONDS
-from config import STATUS_TOPIC
 from metrics import collect_metrics
 
 running = True
 connected = False
+
+TEDGE_TOPIC = "te/device/main///m/system"
 
 
 def handle_shutdown(signum, frame):
@@ -33,8 +34,7 @@ def on_connect(client, userdata, flags, rc):
         return
 
     connected = True
-    client.publish(STATUS_TOPIC, "online", retain=True)
-    logging.info("Telemetry agent is online")
+    logging.info("Telemetry agent connected")
 
 
 def on_disconnect(client, userdata, rc):
@@ -49,31 +49,8 @@ def on_disconnect(client, userdata, rc):
     logging.warning("MQTT client disconnected unexpectedly: rc=%s", rc)
 
 
-def build_payload(metric):
-    return {
-        "device": DEVICE_ID,
-        "metric": metric["name"],
-        "value": metric["value"],
-        "unit": metric["unit"],
-        "timestamp": int(time.time()),
-    }
-
-
-def publish_metric(client, metric):
-    topic = f"device/telemetry/{metric['name']}"
-    payload = json.dumps(build_payload(metric), separators=(",", ":"))
-    result = client.publish(topic, payload)
-
-    if result.rc != mqtt.MQTT_ERR_SUCCESS:
-        logging.warning("Failed to publish %s: rc=%s", topic, result.rc)
-        return
-
-    logging.info("Published %s %s %s", metric["name"], metric["value"], metric["unit"])
-
-
 def create_client():
     client = mqtt.Client(client_id=f"{DEVICE_ID}-telemetry")
-    client.will_set(STATUS_TOPIC, payload="offline", retain=True)
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
     client.reconnect_delay_set(min_delay=1, max_delay=30)
@@ -83,22 +60,61 @@ def create_client():
 def connect(client):
     while running:
         try:
-            logging.info("Connecting to MQTT broker %s:%s", MQTT_BROKER, MQTT_PORT)
-            client.connect(MQTT_BROKER, MQTT_PORT, MQTT_KEEPALIVE_SECONDS)
+            logging.info(
+                "Connecting to MQTT broker %s:%s",
+                MQTT_BROKER,
+                MQTT_PORT,
+            )
+
+            client.connect(
+                MQTT_BROKER,
+                MQTT_PORT,
+                MQTT_KEEPALIVE_SECONDS,
+            )
+
             client.loop_start()
             return
+
         except OSError as exc:
             logging.warning("MQTT connection failed: %s", exc)
             time.sleep(5)
 
 
-def publish_metrics(client):
+def build_tedge_payload():
+    payload = {}
+
+    for metric in collect_metrics():
+        payload[metric["name"]] = metric["value"]
+
+    payload["timestamp"] = int(time.time())
+
+    return payload
+
+
+def publish_telemetry(client):
     if not connected:
         logging.warning("Skipping publish while MQTT client is offline")
         return
 
-    for metric in collect_metrics():
-        publish_metric(client, metric)
+    payload = json.dumps(
+        build_tedge_payload(),
+        separators=(",", ":"),
+    )
+
+    result = client.publish(
+        TEDGE_TOPIC,
+        payload,
+        qos=1,
+    )
+
+    if result.rc != mqtt.MQTT_ERR_SUCCESS:
+        logging.warning(
+            "Failed to publish telemetry: rc=%s",
+            result.rc,
+        )
+        return
+
+    logging.info("Published telemetry payload")
 
 
 def main():
@@ -115,14 +131,15 @@ def main():
 
     while running:
         try:
-            publish_metrics(client)
+            publish_telemetry(client)
+
         except Exception:
             logging.exception("Telemetry publish loop failed")
 
         time.sleep(PUBLISH_INTERVAL_SECONDS)
 
     logging.info("Telemetry agent is shutting down")
-    client.publish(STATUS_TOPIC, "offline", retain=True)
+
     client.loop_stop()
     client.disconnect()
 

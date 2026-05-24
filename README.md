@@ -16,7 +16,7 @@ A home IoT gateway lab that uses thin-edge.io on a BeagleBone Black.
 
 - [x] Cross-compilation workflow
 - [x] MQTT fundamentals
-- [ ] thin-edge.io integration
+- [x] thin-edge.io integration
 - [ ] Dashboard and visualization
 - [ ] Industrial gateway simulation
 - [ ] Cloud integration

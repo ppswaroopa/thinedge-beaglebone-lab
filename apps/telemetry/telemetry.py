@@ -17,8 +17,22 @@ from metrics import collect_metrics
 running = True
 connected = False
 
+LED_PATH = "/sys/class/leds/beaglebone:green:usr0/brightness"
 TEDGE_TOPIC = "te/device/main///m/system"
+COMMAND_TOPIC = "device/command/led"
 
+def set_led(state):
+    with open(LED_PATH, "w") as f:
+        f.write("1" if state else "0")
+
+
+def blink_pattern():
+    for _ in range(3):
+        set_led(True)
+        time.sleep(0.15)
+
+        set_led(False)
+        time.sleep(0.15)
 
 def handle_shutdown(signum, frame):
     global running
@@ -33,9 +47,18 @@ def on_connect(client, userdata, flags, rc):
         logging.warning("MQTT broker rejected connection: rc=%s", rc)
         return
 
+    client.subscribe(COMMAND_TOPIC)
+
     connected = True
     logging.info("Telemetry agent connected")
 
+def on_message(client, userdata, msg):
+    payload = msg.payload.decode().strip()
+
+    print(f"Command received: {payload}")
+
+    if payload == "blink":
+        blink_pattern()
 
 def on_disconnect(client, userdata, rc):
     global connected
@@ -53,6 +76,7 @@ def create_client():
     client = mqtt.Client(client_id=f"{DEVICE_ID}-telemetry")
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
+    client.on_message = on_message
     client.reconnect_delay_set(min_delay=1, max_delay=30)
     return client
 
